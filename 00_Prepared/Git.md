@@ -246,7 +246,7 @@ ssh-keygen -t rsa -b 4096 -C "email@example.com"
 2. 查看公钥
 
 ```bash
-cat ~/.ssh/is_rsa.pub
+cat ~/.ssh/id_rsa.pub
 ```
 
 3. 配置公钥
