@@ -25,8 +25,6 @@
 
 ## 3. git工作流程图
 
-![image-20251008221544818](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251008221544818.png)
-
 ## 4. git安装与基本配置
 
 ### 4.1 安装
@@ -76,7 +74,7 @@ git config --global init.defaultBranch main
 
 git工作目录下对于文件的**修改**[^1]会存在几个状态，这些**修改**会随着我们执行git命令而发生变化
 
-![](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/2025-10-08_22-54.png "状态图")
+
 
 - git add （工作区--> 暂存区）
 - git commit （暂存区--> 本地仓库）
@@ -85,15 +83,15 @@ git工作目录下对于文件的**修改**[^1]会存在几个状态，这些**�
 
 1. 使用`git status`查看当前文件的状态
 
-![image-20251008230312381](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251008230312381.png "工作区未跟踪状态")
+
 
 2. 使用`git add .`将==未跟踪或者未暂存==的文件从工作区-->暂存区
 
-![image-20251008230746231](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251008230746231.png "暂存区")
+
 
 3. 使用`git commit -m （label）` 注释完成提交到仓库
 
-![image-20251008231536842](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251008231536842.png)
+
 
 4. 使用`git log`查看日志生成的
 
@@ -136,7 +134,7 @@ build/
 git branch
 ```
 
-![image-20251009101518797](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009101518797.png)
+
 
 ### 5.2 创建本地分支
 
@@ -144,15 +142,15 @@ git branch
 git branch (分支名)
 ```
 
-![image-20251009101621736](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009101621736.png)
+
 
 使用`git-log`查看，观察可得新建的分支`admin`是直接复制原有分支`main`的内容的
 
-![image-20251009103631358](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009103631358.png)
+
 
 而正好新建的`.gitignore`并未提交，因此提交后，再使用`git-log`命令后可以观察得，`admin`停留在了其刚创建的分支，而当前的主分支`main`则指向了新提交的分支
 
-![image-20251009103836379](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009103836379.png)
+
 
 ### 5.3 切换分支/checkout
 
@@ -162,7 +160,7 @@ git checkout (分支名)
 
 现在切换到了`admin`分支，在这个分支下新建`Git_branch.md`文件再进行提交，使用`git-log`后，可以看到现在的文件树出现了分支
 
-![image-20251009115000435](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009115000435-1759983146467-1.png)
+
 
 再次切回`main`分支，修改内容后提交使用`git-log`查看
 
@@ -182,13 +180,11 @@ git merge (分支名)
 
 切换回`main`后，看不见再`admin`中的提交，进行再次修改后使用`git-log`查看结果为
 
-![image-20251009115752147](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009115752147.png)
+
 
 将`admin`中所做的提交合并到`main`，**应保证当前分区为合并后的`main`**,使用`git-log`查看成功合并
 
-![image-20251009120113566](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009120113566.png)
 
-![image-20251009120155184](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009120155184.png)
 
 ### 5.5 删除分支
 
@@ -200,7 +196,7 @@ git branch -d (分支名)
 
 现在位于`main`分区，故无法删除`main`，将`admin`进行删除
 
-![image-20251009120622561](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009120622561.png)
+
 
 *强制删除分支*
 
@@ -233,7 +229,7 @@ git branch -D (分支名)
 - `feature/xxx`分支：从`develop`分支创建，一般是==同期并行开发==，但不同期上线时创建的分支，分支的研发任务完成后合并到`develop`分支
 - `hotfix/xxx`分支：从`main`分支派生，一般作为==线上bug修复使用==，修复完成后需要合并到`main`、`test`、`develop`分支
 
-![image-20251009142620305](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009142620305.png)
+
 
 ## 6. git远程仓库
 
@@ -268,7 +264,7 @@ git remote add origin git@github.com:xxx/xxx.git # 添加远程仓库
 git remote # 查看是否添加了远程仓库
 ```
 
-![image-20251009151922348](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009151922348.png)
+
 
 2. 将文件推送到远程仓库
 
@@ -282,7 +278,7 @@ git push [-f] [--set-upstream] (远程名称(本地分支名)(:远程分支名))
 
 - 如果**当前分支与远端分支关联**，则可以省略分支名和远端名
 
-![image-20251009152310497](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009152310497.png)
+
 
 通过下述指令来查看本地分支和远程分支的对应关系
 
@@ -290,7 +286,7 @@ git push [-f] [--set-upstream] (远程名称(本地分支名)(:远程分支名))
 git branch -vv
 ```
 
-![image-20251009155529225](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009155529225.png)
+
 
 当前是处于没有关联的状态，故使用下面的指令将本地和远程的分支联系起来，现在即可直接使用`git push`进行推送
 
@@ -298,10 +294,6 @@ git branch -vv
 git checkout main # 切换回main分支 暂不知是什么操作导致头指针与main分离
 git push --set-upstream origin main:main
 ```
-
-![image-20251009160106157](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009160106157.png)
-
-![image-20251009160915433](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image_2025/1029/image-20251009160915433.png)
 
 ### 6.3 从远程仓库克隆
 

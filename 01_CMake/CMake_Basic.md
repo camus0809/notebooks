@@ -110,9 +110,5 @@ add_executable(可执行程序名 源文件名称)
 cmake CMakeLists.txt文件所在路径
 ```
 
-![image01](assets/image01.png)
-
-![image02](assets/image02.png)
-
 [^1]: 一套工具链，所谓tool chain，包含==**预处理、编译、汇编、链接**==四个步骤
 
