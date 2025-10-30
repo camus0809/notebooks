@@ -55,10 +55,3 @@
 image_{y}/{m}{d}/{origin}
 ```
 
-```
-
-```
-
-
-
-![image-20251012103511109](https://raw.githubusercontent.com/camus0809/Typora_Image/devl/image-20251012103511109.png)
