@@ -295,3 +295,13 @@ H<sub>2</sub>
 
 H<sup>2</sup>
 
+> [!important]
+
+> [!note]
+
+> [!caution]
+
+> [!warning]
+
+> [!tip]
+
