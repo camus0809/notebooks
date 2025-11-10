@@ -2,6 +2,16 @@
 
 STM32是ST公司基于ARM Cortex-M内核开发的32位微控制器
 
+![image-20251109235122289](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1109/image-20251109235122289.png "stm32f103c8t6引脚分布图")
+
+- 特殊功能引脚
+  - VDD 供电+
+  - VSS 供电-
+  - NRST 复位
+  - VBAT 备用电源
+  - BOOT 启动模式选择
+- 
+
 ## 0.1 片上资源/外设 peripheral
 
 > 深色位Cortex-M3内核中的外设，浅色位外部外设
@@ -35,6 +45,7 @@ STM32是ST公司基于ARM Cortex-M内核开发的32位微控制器
   - E 512K字节
 - T：封装
   - H BGA
+  - I UFBGA
   - T LQFP
   - U VFQFPN
   - Y WLCSP64
@@ -150,6 +161,34 @@ GPIOC->ODR=0x00002000;	// 配置PC13=1
 # 1. GPIO
 
 General purpose input output 通用输入输出端口
+
+STM32F103C8T6的GPIO包括
+
+- GPIOA： PA0-PA15
+- GPIOB： PB0-PB15
+- GPIOC：PC13-PC15
+- GPIOD：PD0 PD1
+
+输出速度：
+
+1. IO的最大输出速度：向IO交替写0和1且输出不失真的最快速度
+2. 上升时间、保持时间和下降时间
+
+![image-20251110002534445](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1110/image-20251110002534445.png)
+
+3. 限制最大输出速度的因素
+
+![image-20251110002732346](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1110/image-20251110002732346.png)
+
+即上升时间和下降时间的长度
+
+4. ​	选择最大输出速度的原因
+
+![image-20251110002905820](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1110/image-20251110002905820.png)
+
+应当选择满足要求的最小值
+
+过于陡峭的边沿会增加功耗，并引入EMI问题 *电磁干扰*
 
 作用：负责采集外部器件的信息或者控制外部器件工作
 
@@ -277,8 +316,8 @@ General purpose input output 通用输入输出端口
 >
 > - `GPIO_MODE_AIN`				 模拟输入
 > - `GPIO_MODE_IN_FLOATING`		输入浮空
-> - `GPIO_MODE_IPD`				下拉输出
-> - `GPIO_MODE_IPU`				上拉输出
+> - `GPIO_MODE_IPD`				下拉输入
+> - `GPIO_MODE_IPU`				上拉输入
 > - `GPIO_MODE_OUT_OD`			  开漏输出
 > - `GPIO_MODE_OUT_PP`			  推挽输出
 > - `GPIO_MODE_AF_OD`			    开漏复用
@@ -311,16 +350,26 @@ General purpose input output 通用输入输出端口
 ==配置步骤==
 
 1. 使能时钟 `RCC_APB2PeriphClockCmd(uint32_t RCC_APB2Periph, FunctionalState NewState)`
+
 2. 设置工作模式  配置`GPIO_InitTypeDef`结构体后，使用`GPIO_Init(GPIO_TypeDef* GPIOx, GPIO_InitTypeDef* GPIO_InitStruct)`初始化工作模式
    - `GPIO_InitTypeDef`
      - GPIO_Pin：`GPIO_Pin_y` (y=0...15)
      - GPIO_Mode：<a href="#GPIO_Mode">点击查看</a>
      - GPIO_Speed：`GPIO_Speed_rMHz` (r=2, 10, 50)
+   
 3. 设置输出状态（可选）
    - `GPIO_SetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)`：设置为1
+   
    - `GPIO_ResetBits(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)`：设置为0
+   
    - `GPIO_WriteBit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, BitAction BitVal)`，设置为BitVal
+   
+     - BitVal	--> Bit_RESET
+   
+       ​		  -->  Bit_SET
+   
    - `GPIO_Write(GPIO_TypeDef* GPIOx, uint16_t PortVal)`，设置整个GPIOx口
+   
 4. 设置输入状态（可选）
    - `GPIO_ReadInputDataBit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)`，读取GPIOx中的GPIO_Pin的输入电平
    - `GPIO_ReadInputData(GPIO_TypeDef* GPIOx)`，读取GPIOx中16位的输入电平
@@ -329,10 +378,130 @@ General purpose input output 通用输入输出端口
 
 
 
+# 2. EXTI外部中断
+
+External Interrupt and Event Controller 外部中断和时间控制器
+
+## 2.1 中断系统
+
+中断是指**在主程序运行过程中**，出现在**特定的中断触发条件（中断源）**，使得CPU暂停当前正在运行的程序，转去处理中断程序，处理好后又返回到被暂停的位置继续运行
+
+中断优先级：当有多个中断源**同时申请中断**，CPU会根据中断源的轻重缓急进行裁决，优先响应更加紧急的中断源 (==自行设定==)
+
+中断嵌套：当一个中断程序**正在运行**时，又有新的更高优先级的中断程序申请中断，CPU再次暂停当前中断程序，转而处理优先级更高的中断程序，处理好后依次进行返回
+
+![image-20251108181014684](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1108/image-20251108181014684.png "左为中断 右为中断嵌套")
+
+## 2.2 STM32中断
+
+- 68个可屏蔽中断通道[^2]，包含EXTI、TIM、ADC、USART、SPI、IIC、DMA、CAN、RTC等多个外设
+
+- 使用NVIC[^3]统一管理中断，每个中断通道都拥有16个可编程的优先等级，可对优先级进行分组，进一步设置抢占优先级和响应优先级
+
+  - NVIC优先级分组 **==值越小，优先级越高==**
+
+    - 由优先级寄存器的4位决定，着4位可以进行切分，分为高n位的抢占优先级和低4-n位的响应优先级
+
+    - 抢占优先级高的可以中断嵌套，响应优先级高的可以优先排队，抢占优先级和响应优先级均相同的按中断号排队
+
+| 分组方式 | 抢占优先级      | 响应优先级      |
+| -------- | --------------- | --------------- |
+| 分组0    | 0位，取值为0    | 4位，取值为0~15 |
+| 分组1    | 1位，取值为0~1  | 3位，取值为0~7  |
+| 分组2    | 2位，取值为0~3  | 2位， 取值为0~3 |
+| 分组3    | 3位，取值为0~7  | 1位，取值为0~1  |
+| 分组4    | 4位，取值为0~15 | 0位，取值为0    |
+
+
+
+## 2.3 EXTI(Extern Interrupt) 
+
+- 可以检测指定GPIO的电平信号，当指定的GPIO口产生电平变化时，EXTI将立即向NVIC发出中断申请，经过NVIC裁决后即可中断CPU主程序，使CPU执行EXTI对应的中断程序
+
+- 支持的触发方式：上升沿/下降沿/双边沿/软件触发
+- 支持的GPIO口：所有的，==但相同的Pin不能同时触发中断==
+- 通道数：**16**个GPIO_Pin，外加PVD输出、RTC闹钟、USB唤醒、以太网唤醒
+- 触发响应方式：中断响应（正常流程，引脚电平变化触发中断）/事件响应（==不会触发中断==，而是触发别的外设操作）
+
+![image-20251108184737989](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1108/image-20251108184737989.png)
+
+![image-20251108185419752](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1108/image-20251108185419752.png)
+
+## 2.4 AFIO 复用IO口
+
+AFIO Alternate Function Input/Output
+
+<!-- 相同的Pin不能同时触发中断的原因 -->
+
+- 主要用于引脚复用功能的选择和重定义
+- 在STM32中，AFIO主要完成两个任务：复用功能引脚重映射、中断引脚选择
+
+![image-20251108184956105](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1108/image-20251108184956105.png)
+
+标准库相关函数 --> 没有专门的库文件，存在GPIO的库文件中
+
+- `GPIO_AFIODeInit()`： 复位APIO
+- `GPIO_PinLockConfig(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)`: 锁定GPIO配置
+- `GPIO_EventOutputConfig(uint8_t GPIO_PortSource, uint8_t GPIO_PinSource)`： AFIO的事件输出
+- `GPIO_EventOutputCmd(FunctionalState NewState)`： AFIO的事件输出
+- `GPIO_PinRemapConfig(uint32_t GPIO_Remap, FunctionalState NewState)`： 引脚重映射
+- `GPIO_EXTILineConfig(uint8_t GPIO_PortSource, uint8_t GPIO_PinSource)`： 配置AFIO的数据选择器，选择需要的中断引脚
+- `GPIO_ETH_MediaInterfaceConfig(uint32_t GPIO_ETH_MediaInterface)`： 以太网配置
+
+## 2.5 旋转编码器
+
+用于==测量位置、速度或旋转方向==的装置，当其旋转轴旋转时，其输出端可以输出与旋转速度和方向对应的方波信号，读取方波信号的频率和相位信息即可得知旋转轴的速度和方向
+
+类型：机械触点式、霍尔传感器式、光栅式
 
 
 
 
- 
+
+# 3. TIM定时器
+
+## 3.1 TIM简介
+
+TIM（Timer）**专门用于定时功能的片上外设**
+
+- 定时器可以对输入的时钟进行计数，并在计数值达到设定值时触发中断
+- 16位计数器、预分频器、自动重装寄存器的时基单元，在72MHz计数时钟下可以实现最大59.65s的定时
+- 不仅具备基本的定时中断功能，而且还包含内外时钟源选择、输入捕获、输出比较、编码器接口、主从触发模式等功能
+- 根据复杂度和应用场景分为高级定时器、通用定时器、基本定时器三种
+
+![image-20251109231929382](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1109/image-20251109231929382.png)
+
+## 3.2 时基单元
+
+![image-20251109233033036](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1109/image-20251109233033036.png)
+
+## 3.3 定时器类型
+
+| 类型       | 编号       | 总线 | 功能                                                         |
+| ---------- | ---------- | ---- | ------------------------------------------------------------ |
+| 高级定时器 | TIM1、TIM8 | APB2 | 拥有通用定时器全部功能，并额外具有重复计数器、死区生成、互补输出、刹车输入等功能 |
+| 通用定时器 | TIM2-TIM5  | APB1 | 拥有基本定时器全部功能，并额外具有内外时钟选择、输入捕获、输出比较、编码器接口、主从触发模式等功能 |
+| 基本计时器 | TIM6、TIM7 | APB1 | 拥有定时中断、主模式触发DAC的功能                            |
+
+### 3.3.1 高级控制定时器
+
+1. 由16位的自动装载计数器组成，由一个可编程的预分频器驱动
+
+2. 适用场景：
+
+   - 测量输入信号的脉冲宽度（输入捕获），产生输出波形（输出比较、PWM、嵌入死区时间的互补PWM等）
+
+
+3. 使用定时器预分频器和RCC时钟控制预分频器可以实现==脉冲宽度和波形周期从几个微秒到几个毫秒的调节==
+
+4. 与通用定时器**完全独立**，不共享任何资源，可以**同步操作**
+
+
+
+
+
+
 
 [^1]: `RCC->APB2ENR`定义在`stm32f10x.h`中，为一个结构体
+[^2]: 即中断源
+[^3]:  Nested Vectored Interrupt Controller，嵌套向量中断控制器
