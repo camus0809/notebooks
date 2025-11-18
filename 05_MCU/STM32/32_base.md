@@ -1,4 +1,4 @@
-# 0. 预备工作
+#  0. 预备工作
 
 STM32是ST公司基于ARM Cortex-M内核开发的32位微控制器
 
@@ -498,7 +498,150 @@ TIM（Timer）**专门用于定时功能的片上外设**
 
 
 
+# 4. 串口通信
 
+Tx/Txd: Transmit 发送引脚
+
+Rx/Rxd: Receive 接收引脚
+
+![image-20251116174944572](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1116/image-20251116174944572.png)
+
+## 4.1 通信协议/数据格式
+
+串口数据帧格式
+
+![image-20251116175355590](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1116/image-20251116175355590.png)
+
+可选设置：
+
+- 数据位的长度：8~9位
+- 校验位是否启用：若启用，则数据位的最后一位为校验位
+  - 奇校验：要求数据位中有奇数个1
+  - 偶校验：要求数据位中有偶数个1
+
+> [!note]
+>
+> 包含**校验位**
+
+- 停止位的长度：0.5，1，1.5，2
+
+## 4.2 USART的使用方法
+
+<!-- universal synchronous asynchronous receiver transmitter -->
+
+1. STM32F103C8T6的USART接口
+
+   - APB1: USART2、USART3
+   - APB2: USART1
+
+2. USART基本用法
+
+   ![image-20251117213835900](C:/Users/aurora/AppData/Roaming/Typora/typora-user-images/image-20251117213835900.png)
+
+3. 移位寄存器和串并转换
+
+   - 发送时为**并转串**
+   - 接受时为**串转并**
+
+4. 数据帧格式的设置方法
+
+   上图所示的控制电路
+
+5. 波特率的设置方法
+
+   - 波特率：每秒最多传输多少位
+   - 常见的波特率：9600、115200、921600
+   - ==分频器==：
+
+6. USART***初始化***编程接口
+
+   - void USART_Init(USART_TypeDef* USARTx, USART_InitTypeDef* USART_InitStruct)
+
+   - USART_InitTypeDef
+
+     - USART_BaudRate
+     - USART_WordLength
+       - USART_WordLength_8b
+       - USART_WordLength_9b
+     - USART_StopBits
+       - USART_StopBits_0_5
+       - USART_StopBits_1
+       - USART_StopBits_1_5
+       - USART_StopBits_2
+     - USART_Parity
+       - USART_Parity_No
+       - USART_Parity_Even
+       - USART_Parity_Odd
+     - USART_Mode
+       - USART_Mode_Rx
+       - USART_Mode_Tx
+     - USART_HardwareFlowControl
+       - USART_HardwareFlowControl_None
+       - USART_HardwareFlowControl_RTS
+       - USART_HardwareFlowControl_CTS
+       - USART_HardwareFlowControl_RTS_CTS
+
+     ![image-20251118154423980](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1118/image-20251118154423980.png)
+
+7. 引脚分布表 PA9 --> USART1_TX PA10 --> USART1_RX
+
+   ![image-20251118153438917](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1118/image-20251118153438917.png)
+
+8. 重映射表 PB6 --> USART1_TX PB7 --> USART1_RX
+
+   ![image-20251118153540816](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1118/image-20251118153540816.png)
+
+11. 编程接口
+
+    - void USART_Cmd(USARTTypedef *USARTx, FunctionalState NetState)
+      - 控制USART模块的使能和禁止
+      
+    - FlagStatus USART_GetFlagStatus(USART_TypeDef* USARTx, uint16_t USART_FLAG)
+      - 查询USART标志位的值
+      
+      - 返回值：RESET：0 SET：1
+      
+      - USART_FLAG
+        - USART_FLAG_CTS
+        
+        - USART_FLAG_LBD
+        
+        - **USART_FLAG_TXE**  Tx
+        
+          - Transmit Data RegisterEmpty 发送数据寄存器空
+        
+            当TDR（发送数据寄存器）空时，TxE=1，否则则为0
+        
+        - **USART_FLAG_TC** Tx
+        
+          - Transmit Complete 发送完成
+        
+            当TDR空且移位寄存器空时，TC=1，否则TC=0
+        
+        - **USART_FLAG_RXNE** Rx
+        
+          - Receive Data Register Not Empty 接收寄存器非空
+        
+            当RDR非空时，RxNE=1，否则为0
+        
+        - USART_FLAG_IDLE
+        
+        - USART_FLAG_ORE：过载错误
+        
+          - 读取太慢
+        
+        - USART_FLAG_NE：噪声错误
+        
+        - USART_FLAG_FE：帧格式出错
+        
+          - 最常见的为*检测不到停止位*
+        
+        - **USART_FLAG_PE**： 奇偶校验出错
+      
+    - void USART_SendData(USART_TypeDef* USARTx, uint16_t Data)
+      - 把要发送的数据写入发送数据寄存器里
+      
+    - uint16_t USART_ReceiveData(USART_TypeDef* USARTx)
 
 
 
