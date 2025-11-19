@@ -529,6 +529,24 @@ Rx/Rxd: Receive 接收引脚
 
 <!-- universal synchronous asynchronous receiver transmitter -->
 
+- 通信接口
+  - 通信的目的：将一个设备的数据传送到另一个设备，扩展硬件系统
+  - 通信协议：制定通信的规则，通信双方按照协议规则进行数据收发
+
+| 名称  | 引脚                 | 双工   | 时钟 | 电平 | 设备   |
+| ----- | -------------------- | ------ | ---- | ---- | ------ |
+| USART | Tx, Rx               | 全双工 | 异步 | 单端 | 点对点 |
+| I2C   | SCL、SDA             | 半双工 | 同步 | 单端 | 多设备 |
+| SPI   | SCLK、MOSI、MISO、CS | 全双工 | 同步 | 单端 | 多设备 |
+| CAN   | CAN_H、CAN_L         | 半双工 | 异步 | 差分 | 多设备 |
+| USB   | DP、DM               | 半双工 | 异步 | 差分 | 点对点 |
+
+- 单端电平需共地
+- 常见的电平标准
+  - TTL		 +3.3v~+5v --> 1， 	   0v --> 0
+  - RS232	 -3v~-15v    -->1, 		+3~+15v --> 0
+  - RS485	两线压差+2~+6v表示1， -2~-6v表示0
+
 1. STM32F103C8T6的USART接口
 
    - APB1: USART2、USART3
@@ -548,6 +566,8 @@ Rx/Rxd: Receive 接收引脚
    上图所示的控制电路
 
 5. 波特率的设置方法
+
+   ==二进制调制下，波特率与比特率数值相等==
 
    - 波特率：每秒最多传输多少位
    - 常见的波特率：9600、115200、921600
@@ -591,57 +611,93 @@ Rx/Rxd: Receive 接收引脚
 
    ![image-20251118153540816](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1118/image-20251118153540816.png)
 
-11. 编程接口
+9. 编程接口
 
-    - void USART_Cmd(USARTTypedef *USARTx, FunctionalState NetState)
-      - 控制USART模块的使能和禁止
-      
-    - FlagStatus USART_GetFlagStatus(USART_TypeDef* USARTx, uint16_t USART_FLAG)
-      - 查询USART标志位的值
-      
-      - 返回值：RESET：0 SET：1
-      
-      - USART_FLAG
-        - USART_FLAG_CTS
-        
-        - USART_FLAG_LBD
-        
-        - **USART_FLAG_TXE**  Tx
-        
-          - Transmit Data RegisterEmpty 发送数据寄存器空
-        
-            当TDR（发送数据寄存器）空时，TxE=1，否则则为0
-        
-        - **USART_FLAG_TC** Tx
-        
-          - Transmit Complete 发送完成
-        
-            当TDR空且移位寄存器空时，TC=1，否则TC=0
-        
-        - **USART_FLAG_RXNE** Rx
-        
-          - Receive Data Register Not Empty 接收寄存器非空
-        
-            当RDR非空时，RxNE=1，否则为0
-        
-        - USART_FLAG_IDLE
-        
-        - USART_FLAG_ORE：过载错误
-        
-          - 读取太慢
-        
-        - USART_FLAG_NE：噪声错误
-        
-        - USART_FLAG_FE：帧格式出错
-        
-          - 最常见的为*检测不到停止位*
-        
-        - **USART_FLAG_PE**： 奇偶校验出错
-      
-    - void USART_SendData(USART_TypeDef* USARTx, uint16_t Data)
-      - 把要发送的数据写入发送数据寄存器里
-      
-    - uint16_t USART_ReceiveData(USART_TypeDef* USARTx)
+   - void USART_Cmd(USARTTypedef *USARTx, FunctionalState NetState)
+     - 控制USART模块的使能和禁止
+     
+   - FlagStatus USART_GetFlagStatus(USART_TypeDef* USARTx, uint16_t USART_FLAG)
+     - 查询USART标志位的值
+     
+     - 返回值：RESET：0 SET：1
+     
+     - USART_FLAG
+       - USART_FLAG_CTS
+       
+       - USART_FLAG_LBD
+       
+       - **USART_FLAG_TXE**  Tx
+       
+         - Transmit Data RegisterEmpty 发送数据寄存器空
+       
+           当TDR（发送数据寄存器）空时，TxE=1，否则则为0
+       
+       - **USART_FLAG_TC** Tx
+       
+         - Transmit Complete 发送完成
+       
+           当TDR空且移位寄存器空时，TC=1，否则TC=0
+       
+       - **USART_FLAG_RXNE** Rx
+       
+         - Receive Data Register Not Empty 接收寄存器非空
+       
+           当RDR非空时，RxNE=1，否则为0
+       
+       - USART_FLAG_IDLE
+       
+       - USART_FLAG_ORE：过载错误
+       
+         - 读取太慢
+       
+       - USART_FLAG_NE：噪声错误
+       
+       - USART_FLAG_FE：帧格式出错
+       
+         - 最常见的为*检测不到停止位*
+       
+       - **USART_FLAG_PE**： 奇偶校验出错
+     
+   - void USART_SendData(USART_TypeDef* USARTx, uint16_t Data)
+     - 把要发送的数据写入发送数据寄存器里
+     
+   - uint16_t USART_ReceiveData(USART_TypeDef* USARTx)
+
+## 4.3 数据包
+
+数据包的作用：把单独的数据打包起来，方便进行多字节的通信
+
+1. HEX数据包
+
+   - 固定包长，含包头包尾 
+
+   ![image-20251119222215646](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1119/image-20251119222215646.png)
+
+   - 可变包长，含包头包尾
+
+   ![image-20251119222223945](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1119/image-20251119222223945.png)
+
+2. 文本数据包
+
+   - 固定包长，含包头包尾
+
+   ![image-20251119222441739](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1119/image-20251119222441739.png)
+
+   - 可变包长，含包头包尾
+
+   ![image-20251119222502418](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1119/image-20251119222502418.png)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
