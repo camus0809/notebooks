@@ -689,6 +689,109 @@ Rx/Rxd: Receive 接收引脚
 
 
 
+# 5. 中断
+
+单片机应对突发事件的一种方式
+
+![image-20251120194322818](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120194322818.png)
+
+![image-20251120194932560](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120194932560.png)
+
+## 5.1 中断优先级概念
+
+为使系统能及时响应并处理发生的所有中断，系统根据引起中断事件的重要性和紧迫程度，硬件将[中断源](https://baike.baidu.com/item/中断源/10509482?fromModule=lemma_inlink)分为若干个级别
+
+## 5.2 中断优先级的表示方法
+
+![image-20251120212459079](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120212459079.png)
+
+## 5.3 抢占优先级与中断嵌套
+
+- 中断嵌套：更高优先级的中断打断正在执行的中断
+
+  ![image-20251120212557677](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120212557677.png)
+
+## 5.4 子占优先级与中断排队
+
+- 中断排队： 优先级相仿，等待前一个中断执行完再处理新中断
+
+![image-20251120212932746](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120212932746.png)
+
+# 6. IIC
+
+- 为什么使用IIC（即串口通信的缺点）
+  - 只能实现点对点通信
+
+## 6.1 IIC的电路结构
+
+![image-20251120215808619](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120215808619.png)
+
+- 从机地址：0000000~1111111 0~127
+
+## 6.2 数据线和时钟线
+
+**时钟信号**总是从主机发送给从机
+
+ **数据信号**可以双向
+
+## 6.3 逻辑线与
+
+![image-20251120222840555](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120222840555.png)
+
+即有0则0
+
+## 6.4 主机与从机通信
+
+1. 主机发送时钟信号
+   - 让所有的从机的SCL置1
+   - 通过主机拉低和释放SCL实现时钟信号的发送
+2. 主机发送数据
+   - 让所有从机的SDA置1
+   - 通过主机拉低和释放SDA实现数据的发送
+3. 从机发送数据
+   - 让主机和不发送数据的所有从机的SDA置1
+   - 从机通过拉低和释放SDA实现数据的发送
+
+## 6.5 IIC通信协议
+
+![image-20251120223613918](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120223613918.png)
+
+- 主机通过SDA发送一个字节的数据（包括从机地址和读写）
+- 进行数据的通信
+- 发送停止位
+
+## 6.6 IIC的数据帧格式
+
+![image-20251120223756431](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120223756431.png)
+
+- 起始位：SCL高电平，拉低SDA
+- 停止位：SCL高电平，释放SDA
+
+![image-20251120223938852](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120223938852.png)
+
+- 7位地址0x00~0x7F 所以传输时
+  - 例如寻址0x78（读）	**因为数据手册给出的地址一般是已经左移后包含标志位的8位数据**
+    - 0111 100~~0~~
+    - 补上读写位 0111 1001
+- ACK
+  - 即 主机释放SDA，若有从机将SDA拉低，即为应答
+
+![image-20251120225321416](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120225321416.png)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
