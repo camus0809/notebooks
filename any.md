@@ -55,3 +55,7 @@
 image_{y}/{m}{d}/{origin}
 ```
 
+`archlinux `中，生成密钥需要下载openssh
+```bash
+sudo pacman -S openssh
+```
