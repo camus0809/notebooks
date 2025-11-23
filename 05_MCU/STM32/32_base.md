@@ -904,7 +904,7 @@ Rx/Rxd: Receive 接收引脚
 
 ![image-20251123225825574](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1123/image-20251123225825574.png)
 
-由于此时是引脚直接控制输出,故因使用通用开漏模式
+由于此时是引脚直接控制输出,故因使用通用开漏模式 GPIO_Mode_Out_OD
 
 
 
