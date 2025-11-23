@@ -500,6 +500,8 @@ TIM（Timer）**专门用于定时功能的片上外设**
 
 # 4. 串口通信
 
+<p style="color:red"> 低位先行</p>
+
 Tx/Txd: Transmit 发送引脚
 
 Rx/Rxd: Receive 接收引脚
@@ -719,6 +721,8 @@ Rx/Rxd: Receive 接收引脚
 
 # 6. IIC
 
+<p style="color:red" > 高位先行 </p>
+
 - 为什么使用IIC（即串口通信的缺点）
   - 只能实现点对点通信
 
@@ -728,31 +732,35 @@ Rx/Rxd: Receive 接收引脚
 
 - 从机地址：0000000~1111111 0~127
 
-## 6.2 数据线和时钟线
+1. 数据线和时钟线
+   - **时钟信号**总是从主机发送给从机
+   - **数据信号**可以双向
 
-**时钟信号**总是从主机发送给从机
-
- **数据信号**可以双向
-
-## 6.3 逻辑线与
+2. 逻辑线与
 
 ![image-20251120222840555](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120222840555.png)
 
 即有0则0
 
-## 6.4 主机与从机通信
+3. 主机与从机通信
 
-1. 主机发送时钟信号
-   - 让所有的从机的SCL置1
-   - 通过主机拉低和释放SCL实现时钟信号的发送
-2. 主机发送数据
-   - 让所有从机的SDA置1
-   - 通过主机拉低和释放SDA实现数据的发送
-3. 从机发送数据
-   - 让主机和不发送数据的所有从机的SDA置1
-   - 从机通过拉低和释放SDA实现数据的发送
+   1. 主机发送时钟信号
+      - 让所有的从机的SCL置1
+      - 通过主机拉低和释放SCL实现时钟信号的发送
 
-## 6.5 IIC通信协议
+   2. 主机发送数据
+
+      - 让所有从机的SDA置1
+
+      - 通过主机拉低和释放SDA实现数据的发送
+
+   3. 从机发送数据
+
+      - 让主机和不发送数据的所有从机的SDA置1
+
+      - 从机通过拉低和释放SDA实现数据的发送
+
+4. IIC通信协议
 
 ![image-20251120223613918](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120223613918.png)
 
@@ -760,7 +768,7 @@ Rx/Rxd: Receive 接收引脚
 - 进行数据的通信
 - 发送停止位
 
-## 6.6 IIC的数据帧格式
+5. IIC的数据帧格式
 
 ![image-20251120223756431](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1120/image-20251120223756431.png)
 
@@ -780,25 +788,123 @@ Rx/Rxd: Receive 接收引脚
 
 
 
+## 6.2 IIC模块
 
+1. 属于APB1：I2C1、I2C2
 
+   1. 默认：
+      - I2C1	SCL -->PB6    SDA --> PB7
+      - I2C2        SCL -->PB10  SDA --> PB11
 
+   2. 重映射：
 
+      - I2C1	SCL -->PB8    SDA --> PB9
 
+      - I2C2        无
 
+![image-20251121152828248](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1121/image-20251121152828248.png "中文版 P111")
 
+![image-20251121152913878](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1121/image-20251121152913878.png "RM0008 P168")
 
+2. I2C的速度模式
 
+| 标准模式 | Sm   | Standard Mode | <= 100kbps |
+| -------- | ---- | ------------- | ---------- |
+| 快速模式 | Fm   | Fast Mode     | <=400kbps  |
 
+- 时钟信号的占空比
 
+  - 快速模式下可以设置**时钟信号**的占空比 （*一般选择2/1*）
 
+  ![image-20251121165354568](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1121/image-20251121165354568.png)
+  
+  2. 初始化I2C
+  
+     ```c
+     //	#2. 对I2C1进行初始化
+     	
+     	//	开启I2C1的时钟使能
+     	RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
+     	//	施加复位信号
+     	RCC_APB1PeriphResetCmd(RCC_APB1Periph_I2C1, ENABLE);
+     	//	释放复位信号
+     	RCC_APB1PeriphResetCmd(RCC_APB1Periph_I2C1, DISABLE);
+     ```
+  
+     - 开启I2C1使能后先施加复位信号后释放复位信号的原因
+  
+       - 确保寄存器处于“干净”的默认状态 (Clean Slate)确保寄存器处于“干净”的默认状态 (Clean Slate)
+  
+       - 重置内部硬件状态机 (如果系统在 I2C 通信过程中突然发生异常
+  
+         - 例如：正在传输数据时程序被断点暂停了、线路受到干扰导致总线死锁、或者上一次传输未正常结束），I2C 的内部状态机可能会卡在某个中间状态（比如“忙”状态或等待 ACK 状态）。
+  
+           仅仅修改寄存器配置有时无法让状态机复位。**施加 RCC 复位信号** 就像是给这个外设模块断电重启一样，能强制其内部逻辑逻辑回到初始的 IDLE（空闲）状态，防止初始化后 I2C 依然显示“Bus Busy”
+  
+       - 防御性编程
+  
+         - STM32 的 I2C 外设（尤其是 F1 系列）以“容易卡死”和“硬件 bug 多”而著称。
+           在初始化之前进行一次完整的复位操作，是一种**防御性编程**的习惯。它能最大程度地消除硬件层面的不确定性，提高系统的**鲁棒性（Robustness）**。
+  
 
+3. I2C结构框图
 
+![image-20251121213526435](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1121/image-20251121213526435.png)
 
+- SR： status register
 
+  - SR1
 
+    - SB
 
+      1. 0 --> 起始位未发送
+      2. 1 --> 起始位发送完成
 
+    - AF Acknowledge Failure 应答失败  
+
+      <p style="color:red">需要提前清零</p>
+
+      1. 1 --> 未收到ACK
+
+    - ADDR 寻址成功
+
+      1. 1 --> 寻址成功
+
+    - TxE 发送数据寄存器为空
+
+      1. 1 --> 寄存器为空 
+
+    - BTF 表示一个完整的字节已成功发送或接收
+
+      1. 1 --> 成功发送或接收
+      
+    - RxNE 接收寄存器不为空
+
+      1. 1 -->  
+
+  - SR2
+
+    - BUSY	总线忙标志位
+      1. 0 --> 总线空闲 
+      2. 1 --> 总线忙
+
+- SDA控制
+  - START：发送起始位 写1
+  - ACK 应答位   **只作用于正在被接收的字节**
+    1. 0 --> 发送NAK
+    2. 1 --> 发送ACK
+  - STOP 停止位   **当前字节接收完成之后**
+    1. 1 --> 发送停止位
+
+## 6.3 软件I2C
+
+- 硬件I2C的缺点
+  - 操作繁琐
+  - 引脚位置收到限制
+
+![image-20251123225825574](https://raw.githubusercontent.com/camus0809/Typora_Image/devw/Image_2025/1123/image-20251123225825574.png)
+
+由于此时是引脚直接控制输出,故因使用通用开漏模式
 
 
 
